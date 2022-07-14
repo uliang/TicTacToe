@@ -1,3 +1,4 @@
+import abc
 import numpy as np
 import itertools as it
 
@@ -10,10 +11,42 @@ class InvalidMove(Exception):
         super().__init__(msg, *args, **kwargs)
 
 
-class Board:
+class Board(abc.ABC): 
+
+    @abc.abstractproperty 
+    def depth(self): 
+        ... 
+
+    @abc.abstractproperty 
+    def value(self): 
+        ... 
+    
+    @abc.abstractmethod 
+    def reset(self):
+        ...
+
+    @abc.abstractmethod 
+    def make_move(self, move: int):
+        ... 
+
+    @abc.abstractmethod 
+    def check_win_condition(self): 
+        ... 
+
+    @abc.abstractmethod 
+    def check_terminal_state(self): 
+        ...
+
+    @abc.abstractmethod 
+    def generate_moveset(self): 
+        ... 
+
+
+class TicTacToe(Board):
     _pos = [(0, 0), (0, 1), (0, 2), (1, 0), (1, 1),
             (1, 2), (2, 0), (2, 1), (2, 2)]
     _next_token = {'x': 'o', 'o': 'x'}
+    _empty_board = np.array([[' ']*3]*3)
 
     def __init__(self, board=None, player_token='x'):
         if board is not None:
@@ -21,6 +54,9 @@ class Board:
         else:
             self._board = np.array([[' ']*3]*3)
         self._player_token = player_token
+
+    def reset(self): 
+        self._board = self._empty_board
 
     @property
     def depth(self):
@@ -37,7 +73,7 @@ class Board:
             next_board = np.array(self._board)
             next_board[x, y] = token
             new_token = self._next_token[token]
-            return Board(next_board, new_token)
+            return TicTacToe(next_board, new_token)
         else:
             raise InvalidMove("Position is occupied")
 
@@ -63,7 +99,10 @@ class Board:
     @property 
     def value(self): 
         if self.check_win_condition(): 
-            return 1 if (self._player_token == 'x') else -1
+            return 1 if (self._player_token == 'o') else -1
         elif self.depth == 9: 
             return 0 
         raise ValueError('Board not in a winning or draw state.') 
+
+    def check_terminal_state(self):
+        return self.depth == 9 

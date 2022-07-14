@@ -1,11 +1,11 @@
+from importlib import import_module 
+import argparse as args
 from board import Board
 
-b = Board()
 
+def alphabetapruning(board:Board, alpha, beta, shouldmax):
 
-def alphabetapruning(board, alpha, beta, shouldmax):
-
-    if board.check_win_condition() or board.depth == 9:
+    if board.check_win_condition() or board.check_terminal_state():
         # print(board)
         # print(board.value)
         return board.value
@@ -35,5 +35,13 @@ def alphabetapruning(board, alpha, beta, shouldmax):
 
 
 if __name__ == '__main__':
+    parser = args.ArgumentParser() 
+    parser.add_argument('game')
+    arg = parser.parse_args() 
+
+    mod = import_module('board')
+    game_factory = getattr(mod, arg.game)
+    b = game_factory()
+    
     value = alphabetapruning(b, -999, 999, True)
     print(value)
