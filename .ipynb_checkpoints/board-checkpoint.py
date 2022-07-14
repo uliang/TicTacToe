@@ -42,7 +42,7 @@ class Board:
             raise InvalidMove("Position is occupied") 
         
     def check_win_condition(self): 
-        token = self._player_token
+        token = self._next_token[self._player_token]
         if any((self._board[i, :]==token).all() for i in range(3)): 
             return True 
         if any((self._board[:, j]==token).all() for j in range(3)): 
