@@ -3,7 +3,7 @@ import argparse as args
 from board import Board
 
 
-def alphabetapruning(board: Board, alpha, beta, shouldmax):
+def alphabetapruning(board: Board, alpha=-999, beta=999, shouldmax=True):
 
     if board.check_win_condition() or board.check_terminal_state():
         # print(board)
