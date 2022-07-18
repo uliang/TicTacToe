@@ -12,8 +12,8 @@ import operator
 
 
 Event = namedtuple("Event", ["name", "payload"], defaults=[None, None])
-Trans = namedtuple('Trans', ['target', 'action'], defaults=[None, None])
-Super = namedtuple('Super', ['target'], defaults=[None])
+Trans = namedtuple("Trans", ["target", "action"], defaults=[None, None])
+Super = namedtuple("Super", ["target"], defaults=[None])
 
 
 class GS(enum.Enum):
@@ -31,7 +31,6 @@ class InvalidInput(Exception):
 
 
 class StateMachine(abc.ABC):
-
     def __init__(self, *args, **kwargs):
         self._current_state = None
         self._queue = []
@@ -156,7 +155,7 @@ class Game(StateMachine):
                 self._msg = "Welcome. Press (c) to continue or (q) to exit."
                 return GS.HANDLED
 
-            case Event('continue'):
+            case Event("continue"):
                 return Trans(self.player1)
 
             case GS.SUPER:
@@ -167,40 +166,43 @@ class Game(StateMachine):
             case GS.INITIAL:
                 return Trans(self.player1)
 
-            case Event('win', payload={'value': p}):
+            case Event("win", payload={"value": p}):
+
                 def action():
                     winning_player = 1 if p == 1 else 2
                     self._msg = f"Player {winning_player} has won\n"
-                    self._msg += str(self._board) + '\n'
+                    self._msg += str(self._board) + "\n"
                     self._msg += "Continue? Press (c) to continue or (q) to quit."
+
                 return Trans(self.complete, action)
 
-            case Event('draw'):
+            case Event("draw"):
+
                 def action():
                     self._msg = "Game is drawn.\n"
-                    self._msg += str(self._board) + '\n'
+                    self._msg += str(self._board) + "\n"
                     self._msg += "Continue? Press (c) to continue or (q) to quit."
+
                 return Trans(self.complete, action)
 
-            case Event("player_input", payload={'move': m}):
-                try: 
+            case Event("player_input", payload={"move": m}):
+                try:
                     self._board = self._board.make_move(m)
-                except InvalidMove: 
-                    self._msg = 'Invalid move. Please key in move again'
+                except InvalidMove:
+                    self._msg = "Invalid move. Please key in move again"
                     return GS.HANDLED
-                self._queue.append(Event('check_victory'))
+                self._queue.append(Event("check_victory"))
                 return GS.HANDLED
 
-            case Event('check_victory'):
+            case Event("check_victory"):
                 if self._board.check_win_condition():
-                    self._queue.append(
-                        Event('win', {'value': self._board.value}))
+                    self._queue.append(Event("win", {"value": self._board.value}))
                     return GS.HANDLED
                 elif self._board.check_terminal_state():
-                    self._queue.append(Event('draw'))
+                    self._queue.append(Event("draw"))
                     return GS.HANDLED
                 else:
-                    self._queue.append(Event('next_player'))
+                    self._queue.append(Event("next_player"))
                     return GS.HANDLED
 
             case GS.SUPER:
@@ -208,7 +210,7 @@ class Game(StateMachine):
 
     def player1(self, event):
         match event:
-            case Event('next_player'):
+            case Event("next_player"):
                 return Trans(self.player2)
 
             case GS.ENTRY:
@@ -221,7 +223,7 @@ class Game(StateMachine):
 
     def player2(self, event):
         match event:
-            case Event('next_player'):
+            case Event("next_player"):
                 return Trans(self.player1)
 
             case GS.ENTRY:
@@ -229,12 +231,18 @@ class Game(StateMachine):
                 self._player_message()
                 if self._with_ai:
                     move, _ = min(
-                        [(move, alphabetapruning(self._board.make_move(move), shouldmax=True))
-                         for move in self._board.generate_moveset()],
-                        key=operator.itemgetter(1)
+                        [
+                            (
+                                move,
+                                alphabetapruning(
+                                    self._board.make_move(move), shouldmax=True
+                                ),
+                            )
+                            for move in self._board.generate_moveset()
+                        ],
+                        key=operator.itemgetter(1),
                     )
-                    self._queue.append(
-                        Event('player_input', payload={'move': move}))
+                    self._queue.append(Event("player_input", payload={"move": move}))
                 return GS.HANDLED
 
             case GS.SUPER:
@@ -243,8 +251,10 @@ class Game(StateMachine):
     def complete(self, event):
         match event:
             case Event("continue"):
+
                 def action():
                     self._board = self._board.reset()
+
                 return Trans(self.playing, action)
 
             case GS.SUPER:
@@ -265,17 +275,16 @@ class Game(StateMachine):
         try:
             self.handle_input(r)
         except InvalidInput:
-            self._msg = 'Invalid input recived'
+            self._msg = "Invalid input recived"
 
     def handle_input(self, keypressed):
         match keypressed:
-            case 'x' | 'X' | 'q' | 'Q':
+            case "x" | "X" | "q" | "Q":
                 self._queue.append(GS.QUIT)
-            case 'c':
-                self._queue.append(Event('continue'))
+            case "c":
+                self._queue.append(Event("continue"))
             case keypressed if keypressed.isdigit():
-                self._queue.append(
-                    Event('player_input', {'move': int(keypressed)}))
+                self._queue.append(Event("player_input", {"move": int(keypressed)}))
             case _:
                 raise InvalidInput
 
@@ -285,8 +294,13 @@ if __name__ == "__main__":
     parser.add_argument(
         "game", help="Name of the game class specified in the board.py module"
     )
-    parser.add_argument('-ai', '--toggle-AI', action='store_true',
-                        help="Player 2 is controlled by the AI", dest='ai')
+    parser.add_argument(
+        "-ai",
+        "--toggle-AI",
+        action="store_true",
+        help="Player 2 is controlled by the AI",
+        dest="ai",
+    )
     args = parser.parse_args()
 
     mod = import_module("board")
