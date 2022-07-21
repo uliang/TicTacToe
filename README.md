@@ -3,7 +3,7 @@
 A simple CLI application to play TicTacToe and illustrate alpha beta pruning. 
 
 The application framework is based on a simple implementation of Harel statecharts. The framework should run different games which are defined by
-subclassing the Board abstractclass and implementing all required methods. 
+subclassing the Board abstract class and implementing all required methods. 
 
 To run the game application: 
 
